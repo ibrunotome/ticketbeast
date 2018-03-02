@@ -4,13 +4,10 @@ namespace Tests\Unit;
 
 use App\Models\Concert;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 
 class ConcertTest extends TestCase
 {
-    use DatabaseMigrations;
-
     /**
      * A basic test example.
      *
@@ -18,15 +15,28 @@ class ConcertTest extends TestCase
      */
     public function testCanGetFormattedDate()
     {
-        // Create a concert with a know date
-        $concert = factory(Concert::class)->create([
+        $concert = factory(Concert::class)->make([
             'date' => Carbon::parse('2016-12-01 8:00pm')
         ]);
 
-        // Retrieve the formatted date
-        $date = $concert->formatted_date;
+        $this->assertEquals('December 1, 2016', $concert->formatted_date);
+    }
 
-        // Verify the date is formatted as expected
-        $this->assertEquals('December 1, 2016', $date);
+    public function cancGetFormattedStartTime()
+    {
+        $concert = factory(Concert::class)->make([
+            'date' => Carbon::parse('2016-12-01 17:00:00')
+        ]);
+
+        $this->assertEquals('5:00', $concert->formatted_start_time);
+    }
+
+    public function canGetTicketPriceInDollars()
+    {
+        $concert = factory(Concert::class)->make([
+            'ticket_price' => 6750
+        ]);
+
+        $this->assertEquals('67.50', $concert->ticket_price_in_dollars);
     }
 }
