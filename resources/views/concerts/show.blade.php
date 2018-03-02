@@ -1,6 +1,6 @@
 <h1>{{ $concert->title }}</h1>
 <h2>{{ $concert->subtitle }}</h2>
-<p>{{ date('F j, Y', strtotime($concert->date)) }}</p>
+<p>{{ $concert->formatted_date }}</p>
 <p>Doors at {{ date('g:ia', strtotime($concert->date)) }}</p>
 <p>{{ number_format($concert->ticket_price / 100, 2) }}</p>
 <p>{{ $concert->venue }}</p>
