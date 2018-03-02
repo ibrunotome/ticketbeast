@@ -2,13 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Billing\FakePaymentGateway;
+use App\Billing\PaymentGateway;
 use App\Models\Concert;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 
 class PurchaseTicketsTest extends TestCase
 {
+    use DatabaseMigrations;
+
     function testCustomerCanPurchaseConcertTickets()
     {
+        $paymentGateway = new FakePaymentGateway();
+        $this->app->instance(PaymentGateway::class, $paymentGateway);
+
         $concert = factory(Concert::class)->create([
             'ticket_price' => 3250
         ]);
@@ -19,9 +27,11 @@ class PurchaseTicketsTest extends TestCase
             'payment_token'   => $paymentGateway->getValidTestToken()
         ]);
 
+        $this->assertResponseStatus(201);
+
         $this->assertEquals(9750, $paymentGateway->totalCharges());
 
-        $order = $concert->orders->where('email', 'john@example.com')->first();
+        $order = $concert->orders()->where('email', 'john@example.com')->first();
 
         $this->assertNotNull($order);
 
