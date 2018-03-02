@@ -27,14 +27,14 @@ class PurchaseTicketsTest extends TestCase
             'payment_token'   => $paymentGateway->getValidTestToken()
         ]);
 
+        // Assert
         $this->assertResponseStatus(201);
 
+        // Make sure the customer was charged the correct amount
         $this->assertEquals(9750, $paymentGateway->totalCharges());
 
-        $order = $concert->orders()->where('email', 'john@example.com')->first();
-
+        // Make sure that an order exists for this customer
+        $order = $concert->orders->where('email', 'john@example.com')->first();
         $this->assertNotNull($order);
-
-        $this->assertEquals(3, $order->tickets->count());
-    }
+        $this->assertEquals(3, $order->tickets()->count());    }
 }
