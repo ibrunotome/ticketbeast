@@ -21,4 +21,9 @@ class Order extends Model
 
         $this->delete();
     }
+
+    public function ticketQuantity()
+    {
+        return $this->tickets()->count();
+    }
 }
