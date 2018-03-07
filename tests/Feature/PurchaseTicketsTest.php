@@ -136,7 +136,7 @@ class PurchaseTicketsTest extends TestCase
         $this->assertEquals(0, $this->paymentGateway->totalCharges());
     }
 
-    public function cannotPurchaseMoreTicketsThanRemain()
+    public function testCannotPurchaseMoreTicketsThanRemain()
     {
         $concert = factory(Concert::class)->states('published')->create();
         $concert->addTickets(50);
@@ -153,6 +153,5 @@ class PurchaseTicketsTest extends TestCase
         $this->assertNull($order);
         $this->assertEquals(0, $this->paymentGateway->totalCharges());
         $this->assertEquals(50, $concert->ticksRemaining());
-
     }
 }
