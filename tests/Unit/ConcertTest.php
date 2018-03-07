@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Exceptions\NotEnoughTicketsException;
 use App\Models\Concert;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -59,7 +60,8 @@ class ConcertTest extends TestCase
     public function testCanOrderConcertTickets()
     {
         $concert = factory(Concert::class)->create();
-        $order   = $concert->orderTickets('jane@example.com', 3);
+        $concert->addTickets(3);
+        $order = $concert->orderTickets('jane@example.com', 3);
 
         $this->assertEquals('jane@example.com', $order->email);
         $this->assertEquals(3, $order->tickets()->count());
@@ -80,5 +82,43 @@ class ConcertTest extends TestCase
         $concert->orderTickets('jane@example.com', 30);
 
         $this->assertEquals(20, $concert->ticketsRemaining());
+    }
+
+    public function testTryingToPurchaseMoreTicketsThanRemainThrowsAnException()
+    {
+        $concert = factory(Concert::class)->states('published')->create();
+        $concert->addTickets(10);
+
+        try {
+            $concert->orderTickets('jane@example.com', 11);
+        } catch (NotEnoughTicketsException $exception) {
+            $order = $concert->orders()->where('email', 'jane@example.com')->first();
+            $this->assertNull($order);
+            $this->assertEquals(10, $concert->ticketsRemaining());
+
+            return;
+        }
+
+        $this->fail('Order succeeded even though there were not enought tickets remaining');
+    }
+
+    public function testCannotOrderTicketsThatHaveAlreadyBeenPurchased()
+    {
+        $concert = factory(Concert::class)->create();
+        $concert->addTickets(10);
+        $concert->orderTickets('jane@example.com', 8);
+
+        try {
+            $concert->orderTickets('john@example.com', 3);
+        } catch (NotEnoughTicketsException $exception) {
+            $johnsOrder = $concert->orders()->where('email', 'john@example.com')->first();
+            $this->assertNull($johnsOrder);
+            $this->assertEquals(2, $concert->ticketsRemaining());
+
+            return;
+        }
+
+        $this->fail('Order succeeded even though there were not enought tickets remaining');
+
     }
 }
