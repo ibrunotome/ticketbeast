@@ -35,15 +35,15 @@ class PurchaseTicketsTest extends TestCase
 
     public function testCustomerCanPurchaseTicketsToAPublishedConcert()
     {
-        // Arrange
         $concert = factory(Concert::class)->states('published')->create(['ticket_price' => 3250]);
-        // Act
+        $concert->addTickets(3);
+
         $this->orderTickets($concert, [
             'email'           => 'john@example.com',
             'ticket_quantity' => 3,
             'payment_token'   => $this->paymentGateway->getValidTestToken(),
         ]);
-        // Assert
+
         $this->assertResponseStatus(201);
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());
         $order = $concert->orders()->where('email', 'john@example.com')->first();
@@ -111,11 +111,14 @@ class PurchaseTicketsTest extends TestCase
     public function testAnOrderIsNotCreatedIfPaymentFails()
     {
         $concert = factory(Concert::class)->states('published')->create(['ticket_price' => 3250]);
+        $concert->addTickets(3);
+
         $this->orderTickets($concert, [
             'email'           => 'john@example.com',
             'ticket_quantity' => 3,
             'payment_token'   => 'invalid-payment-token',
         ]);
+
         $this->assertResponseStatus(422);
         $order = $concert->orders()->where('email', 'john@example.com')->first();
         $this->assertNull($order);
@@ -124,6 +127,7 @@ class PurchaseTicketsTest extends TestCase
     public function testCannotPurchaseTicketsToAnUnpublishedConcert()
     {
         $concert = factory(Concert::class)->states('unpublished')->create();
+        $concert->addTickets(3);
 
         $this->orderTickets($concert, [
             'email'           => 'john@example.com',
@@ -138,6 +142,7 @@ class PurchaseTicketsTest extends TestCase
 
     public function testCannotPurchaseMoreTicketsThanRemain()
     {
+        $this->disableExceptionHandling();
         $concert = factory(Concert::class)->states('published')->create();
         $concert->addTickets(50);
 
@@ -149,9 +154,9 @@ class PurchaseTicketsTest extends TestCase
 
         $this->assertResponseStatus(422);
 
-        $order = $concert->orders()->where('email', 'john@example.com')->fist();
+        $order = $concert->orders()->where('email', 'john@example.com')->first();
         $this->assertNull($order);
         $this->assertEquals(0, $this->paymentGateway->totalCharges());
-        $this->assertEquals(50, $concert->ticksRemaining());
+        $this->assertEquals(50, $concert->ticketsRemaining());
     }
 }
